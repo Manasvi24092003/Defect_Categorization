@@ -1,0 +1,118 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.container {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 900px;
+    margin-top: 20px;
+    box-sizing: border-box;
+}
+h1 {
+    color: #1a237e;
+    text-align: center;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+input[type="file"] {
+    border: 2px dashed #99aab5;
+    border-radius: 8px;
+    padding: 20px;
+    width: 100%;
+    cursor: pointer;
+    text-align: center;
+    background-color: #fafbfd;
+    transition: all 0.3s ease;
+}
+input[type="file"]:hover {
+    border-color: #4b6cb7;
+    background-color: #f5f8ff;
+}
+input[type="file"]::-webkit-file-upload-button {
+    visibility: hidden;
+}
+input[type="file"]::before {
+    content: 'Choose an Excel or CSV file...';
+    display: inline-block;
+    background: #4b6cb7;
+    color: white;
+    border-radius: 6px;
+    padding: 10px 16px;
+    outline: none;
+    white-space: nowrap;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+input[type="file"]:hover::before {
+    background-color: #182848;
+}
+input[type="submit"] {
+    background: #4b6cb7;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 10px rgba(75, 108, 183, 0.3);
+}
+input[type="submit"]:hover {
+    background-color: #182848;
+    transform: translateY(-2px);
+}
+.results-section {
+    display: none; /* Initially hidden */
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+#plotly-chart {
+    width: 100%;
+    height: 500px;
+    margin-bottom: 30px;
+}
+.download-btn-container {
+    text-align: center;
+}
+.download-btn {
+    background: #28a745;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+.download-btn:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+}
+.message {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    font-weight: 500;
+}
