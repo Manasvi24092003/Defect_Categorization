@@ -72,21 +72,11 @@
             top: 0;
         }
         
-        .success-card {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            border: none;
-            color: #155724;
-        }
-        
         .footer {
             background-color: var(--dark);
             color: white;
             padding: 1.5rem 0;
             margin-top: 3rem;
-        }
-        
-        .badge-success {
-            background: linear-gradient(135deg, var(--success) 0%, #20c997 100%);
         }
         
         @media (max-width: 768px) {
@@ -137,8 +127,8 @@
                 <a href="{{ url_for('index') }}" class="btn btn-secondary me-md-2">
                     <i class="fas fa-arrow-left me-2"></i>Back to Upload
                 </a>
-                <a href="{{ url_for('download_file', data=download_data) }}" class="btn btn-primary">
-                    <i class="fas fa-download me-2"></i>Download Results
+                <a href="{{ url_for('download_file') }}" class="btn btn-primary">
+                    <i class="fas fa-download me-2"></i>Download Excel File
                 </a>
             </div>
         </div>
