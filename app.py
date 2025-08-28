@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'defect-categorization-secret-key-2023'
+app.secret_key = 'defect-categorization-secret-key-2025'
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
