@@ -1,4 +1,4 @@
-# app.py (simplified version without scikit-learn)
+# app.py
 import os
 import pandas as pd
 import numpy as np
@@ -6,8 +6,8 @@ from flask import Flask, render_template, request, send_file, flash, redirect, u
 from werkzeug.utils import secure_filename
 import io
 import re
-from collections import Counter
 import json
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'defect-categorization-secret-key-2023'
@@ -21,61 +21,120 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # Create upload directory if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Predefined categories for fallback (extracted from your data)
-PREDEFINED_CATEGORIES = {
-    'report': 'Report',
-    'notification': 'Notifications',
-    'generate': 'Generate Study Structure',
-    'mcc': 'MCC master data sync',
-    'migration': 'Document Migration',
-    'r&a': 'R&A Task',
-    'error': 'Error',
-    'activity': 'Document->Activity list',
-    'my sites': 'My Sites Overview page',
-    'approval': 'Approval task',
-    'access': 'access RCM instance',
-    'property': 'Property',
-    'reference': 'References',
-    'print': 'Print Button',
-    'file': 'File Document',
-    'view': 'View',
-    'review': 'Review Task',
-    'workflow': 'Workflow',
-    'bookmark': 'Bookmark',
-    'user': 'Users Access',
-    'upgrade': 'Upgrade eTMF Structures',
-    'study overview': 'eTMF>Study Overview'
+# Enhanced keyword categorization with weighted matching
+CATEGORY_KEYWORDS = {
+    'Report': {
+        'keywords': ['report', 'extract', 'data', 'record', 'log', 'export', 'download', 'statistic'],
+        'weight': 1.0
+    },
+    'Notifications': {
+        'keywords': ['notification', 'email', 'alert', 'message', 'reminder', 'notify', 'send', 'mail'],
+        'weight': 1.0
+    },
+    'Generate Study Structure': {
+        'keywords': ['generate', 'structure', 'study', 'create', 'build', 'setup', 'initialize', 'rcr', 'fst'],
+        'weight': 1.0
+    },
+    'MCC master data sync': {
+        'keywords': ['mcc', 'sync', 'synchroniz', 'master data', 'data sync', 'prometrika', 'poi', 'mdm'],
+        'weight': 1.0
+    },
+    'Document Migration': {
+        'keywords': ['migration', 'migrate', 'import', 'export', 'transfer', 'move', 'document', 'file'],
+        'weight': 1.0
+    },
+    'R&A Task': {
+        'keywords': ['r&a', 'read', 'acknowledge', 'acknowledgment', 'review', 'approval', 'sign', 'signature'],
+        'weight': 1.0
+    },
+    'Error': {
+        'keywords': ['error', 'exception', 'fail', 'crash', 'broken', 'issue', 'problem', 'bug', 'defect'],
+        'weight': 0.8
+    },
+    'Authentication': {
+        'keywords': ['login', 'password', 'auth', 'authentication', 'credential', 'access', 'sign in', 'log in'],
+        'weight': 1.0
+    },
+    'User Management': {
+        'keywords': ['user', 'profile', 'account', 'role', 'permission', 'admin', 'administrator', 'privilege'],
+        'weight': 1.0
+    },
+    'UI/Dashboard': {
+        'keywords': ['ui', 'interface', 'dashboard', 'screen', 'page', 'view', 'display', 'button', 'menu'],
+        'weight': 0.9
+    },
+    'Document Management': {
+        'keywords': ['document', 'file', 'upload', 'download', 'attach', 'attachment', 'pdf', 'word', 'excel'],
+        'weight': 1.0
+    },
+    'Workflow': {
+        'keywords': ['workflow', 'process', 'approval', 'review', 'task', 'assign', 'assignment', 'step', 'phase'],
+        'weight': 1.0
+    },
+    'System Configuration': {
+        'keywords': ['config', 'configuration', 'setting', 'property', 'parameter', 'setup', 'preference', 'option'],
+        'weight': 1.0
+    },
+    'Performance': {
+        'keywords': ['performance', 'slow', 'speed', 'response', 'timeout', 'load', 'lag', 'delay', 'bottleneck'],
+        'weight': 0.9
+    },
+    'Integration': {
+        'keywords': ['integration', 'api', 'interface', 'connect', 'connection', 'web service', 'rest', 'soap'],
+        'weight': 1.0
+    }
 }
 
-# Simple keyword-based categorization
+# Global variable to store the processed DataFrame
+processed_df = None
+
+# Enhanced categorization with weighted keyword matching
 def categorize_defect(defect_summary):
-    if pd.isna(defect_summary):
+    if pd.isna(defect_summary) or not str(defect_summary).strip():
         return 'Uncategorized'
-        
+    
     summary_lower = str(defect_summary).lower()
     
-    # Check for specific keywords and patterns
-    for keyword, category in PREDEFINED_CATEGORIES.items():
-        if keyword in summary_lower:
-            return category
+    # Calculate scores for each category
+    category_scores = {}
     
-    # Additional pattern matching
-    if any(word in summary_lower for word in ['login', 'password', 'authentication']):
+    for category, data in CATEGORY_KEYWORDS.items():
+        score = 0
+        keywords = data['keywords']
+        weight = data['weight']
+        
+        for keyword in keywords:
+            # Check if keyword appears in the summary
+            if keyword in summary_lower:
+                # Increase score based on keyword weight
+                score += weight
+                # Additional points for exact matches
+                if re.search(r'\b' + re.escape(keyword) + r'\b', summary_lower):
+                    score += 0.5
+    
+        category_scores[category] = score
+    
+    # Find the category with the highest score
+    if category_scores:
+        best_category = max(category_scores, key=category_scores.get)
+        if category_scores[best_category] > 0:
+            return best_category
+    
+    # Fallback for specific patterns
+    if any(word in summary_lower for word in ['login', 'password', 'auth']):
         return 'Authentication'
-    elif any(word in summary_lower for word in ['profile', 'user management']):
+    elif any(word in summary_lower for word in ['profile', 'user', 'account']):
         return 'User Management'
-    elif 'ra task' in summary_lower or 'read & acknowledge' in summary_lower:
-        return 'R&A Task'
     elif any(word in summary_lower for word in ['dashboard', 'ui', 'interface']):
         return 'UI/Dashboard'
-    elif any(word in summary_lower for word in ['email', 'notification']):
+    elif any(word in summary_lower for word in ['email', 'notification', 'alert']):
         return 'Notifications'
     elif any(word in summary_lower for word in ['sync', 'synchroniz']):
-        return 'Synchronization'
-    elif any(word in summary_lower for word in ['pdf', 'view', 'display']):
-        return 'View'
+        return 'MCC master data sync'
     elif any(word in summary_lower for word in ['task', 'assign']):
-        return 'Task Management'
+        return 'Workflow'
+    elif any(word in summary_lower for word in ['document', 'file']):
+        return 'Document Management'
     
     return 'Uncategorized'
 
@@ -101,6 +160,8 @@ def index():
 # Upload and process file
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    global processed_df
+    
     # Check if a file was uploaded
     if 'file' not in request.files:
         flash('No file selected', 'error')
@@ -137,6 +198,9 @@ def upload_file():
         # Categorize defects
         df['Predicted Feature'] = df['Defect Summary'].apply(categorize_defect)
         
+        # Store the processed DataFrame globally
+        processed_df = df.copy()
+        
         # Create visualization data
         category_counts = df['Predicted Feature'].value_counts().reset_index()
         category_counts.columns = ['Category', 'Count']
@@ -149,18 +213,16 @@ def upload_file():
                       '#17a2b8', '#6610f2', '#fd7e14', '#20c997', '#e83e8c']
         }
         
-        # Prepare download data
-        output = io.BytesIO()
-        with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False)
-        output.seek(0)
-        download_data = output.getvalue()
+        # Calculate accuracy metrics
+        total_defects = len(df)
+        uncategorized = len(df[df['Predicted Feature'] == 'Uncategorized'])
+        accuracy_percentage = ((total_defects - uncategorized) / total_defects) * 100 if total_defects > 0 else 0
         
-        flash('Defects categorized successfully using keyword matching', 'success')
+        flash(f'Defects categorized successfully! Accuracy: {accuracy_percentage:.1f}%', 'success')
         return render_template('results.html', 
                               table=df.to_html(classes='table table-striped', index=False),
                               chart_data=json.dumps(chart_data),
-                              download_data=download_data,
+                              accuracy=accuracy_percentage,
                               mode='prediction')
     
     flash('Invalid file type. Please upload a CSV or Excel file.', 'error')
@@ -169,16 +231,33 @@ def upload_file():
 # Download results
 @app.route('/download')
 def download_file():
-    download_data = request.args.get('data')
-    if download_data:
+    global processed_df
+    
+    if processed_df is None:
+        flash('No data to download. Please upload and process a file first.', 'error')
+        return redirect(url_for('index'))
+    
+    try:
+        # Create Excel file in memory
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            processed_df.to_excel(writer, index=False, sheet_name='Categorized Defects')
+        output.seek(0)
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'defects_categorized_{timestamp}.xlsx'
+        
+        # Send the file
         return send_file(
-            io.BytesIO(eval(download_data)),
-            download_name='defects_with_predictions.xlsx',
+            output,
             as_attachment=True,
+            download_name=filename,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-    flash('No data to download', 'error')
-    return redirect(url_for('index'))
+    except Exception as e:
+        flash(f'Error generating download file: {str(e)}', 'error')
+        return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)

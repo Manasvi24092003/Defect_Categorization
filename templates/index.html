@@ -148,20 +148,6 @@
             margin-bottom: 1rem;
         }
         
-        .file-input {
-            display: none;
-        }
-        
-        .preview-area {
-            display: none;
-            margin-top: 1.5rem;
-        }
-        
-        .preview-table {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
         .hero-text {
             font-weight: 300;
             margin-bottom: 1.5rem;
@@ -193,7 +179,7 @@
     <div class="header text-center">
         <div class="container">
             <h1 class="hero-title"><i class="fas fa-robot me-2"></i>AI Defect Categorization</h1>
-            <p class="hero-text lead">Automatically categorize software defects using machine learning</p>
+            <p class="hero-text lead">Automatically categorize software defects using keyword matching</p>
         </div>
     </div>
 
@@ -217,6 +203,7 @@
                 <div class="mb-3">
                     <label for="file" class="form-label">Select Excel or CSV file</label>
                     <input class="form-control" type="file" id="file" name="file" accept=".xlsx,.csv" required>
+                    <div class="form-text">Your file must contain a "Defect Summary" column.</div>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-cloud-upload-alt me-2"></i>Upload and Process</button>
             </form>
@@ -225,11 +212,12 @@
         <div class="instructions">
             <h3><i class="fas fa-info-circle me-2"></i>How It Works</h3>
             <ol>
-                <li><strong>Training Mode:</strong> Upload a file with both "Defect Summary" and "Feature" columns to train a new model</li>
-                <li><strong>Prediction Mode:</strong> Upload a file with only "Defect Summary" column to predict categories using the trained model</li>
-                <li>After processing, you can view results and download the categorized data</li>
+                <li><strong>Upload File:</strong> Select an Excel or CSV file with defect summaries</li>
+                <li><strong>Automatic Processing:</strong> The system analyzes each defect summary using keyword matching</li>
+                <li><strong>View Results:</strong> See categorized defects with interactive charts</li>
+                <li><strong>Download:</strong> Export the categorized data as an Excel file</li>
             </ol>
-            <p class="mb-0">The system uses machine learning (Logistic Regression with TF-IDF) to categorize defects based on historical data.</p>
+            <p class="mb-0">The system uses intelligent keyword matching to categorize defects based on historical patterns.</p>
         </div>
 
         <div class="row mb-4">
@@ -238,8 +226,8 @@
                     <div class="feature-icon">
                         <i class="fas fa-brain"></i>
                     </div>
-                    <h4>AI-Powered</h4>
-                    <p>Uses machine learning to automatically categorize defects based on historical data</p>
+                    <h4>Intelligent Matching</h4>
+                    <p>Uses keyword patterns to automatically categorize defects</p>
                 </div>
             </div>
             <div class="col-md-4 mb-3">
@@ -266,7 +254,7 @@
     <footer class="footer text-center">
         <div class="container">
             <p>AI Defect Categorization Tool &copy; 2023</p>
-            <p class="text-muted">Built with Flask, Scikit-learn, and Bootstrap</p>
+            <p class="text-muted">Built with Flask, Pandas, and Bootstrap</p>
         </div>
     </footer>
 
